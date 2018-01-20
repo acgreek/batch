@@ -1,47 +1,53 @@
-package main
+// Package batch accumulate elements in to a batch and then push it out
+// batch is pushed out if the element limit is reached or timer expires
+package batch
 
 import (
 	"time"
 )
 
+// Batch object that holds the various state for contructing the batches
 type Batch struct {
-	maxItems int
-	maxAge int64
-	age int64
-	incompleteBatch []interface {}
-	items  chan interface {}
-	completeBatch chan []interface {}
+	maxItems        int
+	maxAge          int64
+	age             int64
+	incompleteBatch []interface{}
+	items           chan interface{}
+	completeBatch   chan []interface{}
 }
 
-func (b * Batch) Append(item interface{}) {
+// Append queues an item in the batcher
+func (b *Batch) Append(item interface{}) {
 	b.items <- item
 }
 
-func (b * Batch) Scan() []interface{}  {
+// Scan block until a batch is ready to be processed
+func (b *Batch) Scan() []interface{} {
 	return <-b.completeBatch
 }
 
-func (b * Batch) Close() {
+// Close clean up the Batch
+func (b *Batch) Close() {
 	close(b.items)
 }
-func appendItemPush(b * Batch, ok bool, item interface {}) bool {
+func appendItemPush(b *Batch, ok bool, item interface{}) bool {
 	currentNumItems := len(b.incompleteBatch)
-	if (ok ==false) {
-		if (currentNumItems != 0) {
+	if ok == false {
+		if currentNumItems != 0 {
 			b.completeBatch <- b.incompleteBatch
 		}
-		b.incompleteBatch = make([]interface {}, 0,  b.maxItems)
+		b.incompleteBatch = make([]interface{}, 0, b.maxItems)
 		return true
 	}
-	if (currentNumItems == 0) {
+	if currentNumItems == 0 {
 		b.age = time.Now().Unix()
 	}
-	currentNumItems +=1
+	currentNumItems++
 	b.incompleteBatch = b.incompleteBatch[:currentNumItems]
 	b.incompleteBatch[currentNumItems-1] = item
-	if (currentNumItems == b.maxItems) {
+	if currentNumItems == b.maxItems {
 		b.completeBatch <- b.incompleteBatch
-		b.incompleteBatch = make([]interface {}, 0,  b.maxItems)
+		b.incompleteBatch = make([]interface{}, 0, b.maxItems)
 		b.age = time.Now().Unix() + 100000
 	}
 	return false
@@ -53,33 +59,35 @@ func maximum(a, b int64) int64 {
 	return b
 }
 
-func batchBuilder(b * Batch) {
+func batchBuilder(b *Batch) {
 	done := false
 	for done == false {
-		timer := time.NewTimer(time.Second * time.Duration(maximum(0,b.maxAge - (time.Now().Unix() - b.age))))
+		timer := time.NewTimer(time.Second * time.Duration(maximum(0, b.maxAge-(time.Now().Unix()-b.age))))
 		select {
-		case item, ok := <- b.items:
+		case item, ok := <-b.items:
 			done = appendItemPush(b, ok, item)
-		case <- timer.C:
-			if (len(b.incompleteBatch) > 0) {
+		case <-timer.C:
+			if len(b.incompleteBatch) > 0 {
 				b.completeBatch <- b.incompleteBatch
-				b.incompleteBatch = make([]interface {}, 0,  b.maxItems)
+				b.incompleteBatch = make([]interface{}, 0, b.maxItems)
 			}
 			b.age = time.Now().Unix() + 100000
 		}
 	}
+	close(b.completeBatch)
 }
 
-func NewBatch(maxItems, maxAge, consumers int) *Batch{
+// NewBatch returns a new Batcher, no batch will be larger than maxItems, or have elemnts older than
+// maxAge. consumers should be the set to the number of goroutines you expect to have blocking on Scan
+func NewBatch(maxItems, maxAge, consumers int) *Batch {
 	b := &Batch{
-		maxItems: maxItems,
-		maxAge: int64(maxAge),
-		age: time.Now().Unix() + 10000,
-		incompleteBatch: make([]interface {}, 0, maxItems+1),
-		items: make(chan interface {}, maxItems * consumers),
-		completeBatch: make(chan []interface {}, maxItems * consumers),
+		maxItems:        maxItems,
+		maxAge:          int64(maxAge),
+		age:             time.Now().Unix() + 10000,
+		incompleteBatch: make([]interface{}, 0, maxItems+1),
+		items:           make(chan interface{}, maxItems*consumers),
+		completeBatch:   make(chan []interface{}, maxItems*consumers),
 	}
 	go batchBuilder(b)
-	return b;
+	return b
 }
-
