@@ -2,7 +2,6 @@ package main
 
 import (
 	"testing"
-	"fmt"
 )
 
 func TestOneBatch(t *testing.T) {
@@ -35,15 +34,12 @@ func TestOneBatch(t *testing.T) {
 		t.Fatal("result[0] was not 1.  %d", result[0])
 	}
 
-		fmt.Printf("scan expecting 5\n")
 	result = b.Scan();
 	if (len(result) != 1) {
 		t.Fatal("result was not of length 2. Was %d", len(result))
 	}
-		fmt.Printf("got  5\n")
 	if (result[0] != 5) {
 		t.Fatal("result[0] was not 1.  %d", result[0])
 	}
-		fmt.Printf("Closing b\n")
 	b.Close();
 }

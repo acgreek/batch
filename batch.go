@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"time"
 )
 
@@ -28,7 +27,6 @@ func (b * Batch) Close() {
 func appendItemPush(b * Batch, ok bool, item interface {}) bool {
 	currentNumItems := len(b.incompleteBatch)
 	if (ok ==false) {
-		fmt.Printf("ok is false\n")
 		if (currentNumItems != 0) {
 			b.completeBatch <- b.incompleteBatch
 		}
@@ -58,14 +56,12 @@ func maximum(a, b int64) int64 {
 func batchBuilder(b * Batch) {
 	done := false
 	for done == false {
-		fmt.Printf("sleeping for %d seconds %d\n",maximum(0,b.maxAge - (time.Now().Unix() - b.age)),len(b.incompleteBatch))
-		timer := time.NewTimer(time.Duration(maximum(0,b.maxAge - (time.Now().Unix() - b.age))))
+		timer := time.NewTimer(time.Second * time.Duration(maximum(0,b.maxAge - (time.Now().Unix() - b.age))))
 		select {
 		case item, ok := <- b.items:
 			done = appendItemPush(b, ok, item)
 		case <- timer.C:
 			if (len(b.incompleteBatch) > 0) {
-				fmt.Printf("pushed timed out batch\n")
 				b.completeBatch <- b.incompleteBatch
 				b.incompleteBatch = make([]interface {}, 0,  b.maxItems)
 			}
@@ -87,6 +83,3 @@ func NewBatch(maxItems, maxAge, consumers int) *Batch{
 	return b;
 }
 
-func main() {
-	fmt.Println("vim-go")
-}
