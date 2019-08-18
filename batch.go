@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-// Batch object that holds the various state for contructing the batches
+// Batch object that holds the various state for batching
 type Batch struct {
 	maxItems        int
 	maxAge          int64
@@ -77,7 +77,7 @@ func batchBuilder(b *Batch) {
 	close(b.completeBatch)
 }
 
-// NewBatch returns a new Batcher, no batch will be larger than maxItems, or have elemnts older than
+// NewBatch returns a new Batcher, no batch will be larger than maxItems, or have elements older than
 // maxAge. consumers should be the set to the number of goroutines you expect to have blocking on Scan
 func NewBatch(maxItems, maxAge, consumers int) *Batch {
 	b := &Batch{
