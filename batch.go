@@ -30,6 +30,7 @@ func (b *Batch) Scan() []interface{} {
 func (b *Batch) Close() {
 	close(b.items)
 }
+
 func appendItemPush(b *Batch, ok bool, item interface{}) bool {
 	currentNumItems := len(b.incompleteBatch)
 	if ok == false {
@@ -52,6 +53,7 @@ func appendItemPush(b *Batch, ok bool, item interface{}) bool {
 	}
 	return false
 }
+
 func maximum(a, b int64) int64 {
 	if a > b {
 		return a
