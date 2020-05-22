@@ -5,7 +5,7 @@ import (
 )
 
 func TestOneBatch(t *testing.T) {
-	b := NewBatch(2, 1, 10)
+	b := NewBatch(Config{2, 1, 10})
 	defer b.Close()
 
 	b.Append(1)
