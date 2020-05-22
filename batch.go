@@ -81,14 +81,14 @@ func batchBuilder(b *Batch) {
 
 // NewBatch returns a new Batcher, no batch will be larger than maxItems, or have elements older than
 // maxAge. consumers should be the set to the number of goroutines you expect to have blocking on Scan
-func NewBatch(maxItems, maxAge, consumers int) *Batch {
+func NewBatch(cfg Config) *Batch {
 	b := &Batch{
-		maxItems:        maxItems,
-		maxAge:          int64(maxAge),
+		maxItems:        cfg.maxItems,
+		maxAge:          int64(cfg.maxAge),
 		age:             time.Now().Unix() + 10000,
-		incompleteBatch: make([]interface{}, 0, maxItems+1),
-		items:           make(chan interface{}, maxItems*consumers),
-		completeBatch:   make(chan []interface{}, maxItems*consumers),
+		incompleteBatch: make([]interface{}, 0, cfg.maxItems+1),
+		items:           make(chan interface{}, cfg.maxItems*cfg.consumers),
+		completeBatch:   make(chan []interface{}, cfg.maxItems*cfg.consumers),
 	}
 	go batchBuilder(b)
 	return b
