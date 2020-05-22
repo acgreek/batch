@@ -2,18 +2,21 @@ package batch
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
 
 func TestInCompleteBatchOnClose(t *testing.T) {
-	b := NewBatch(Config{2, 1, 10})
+	maxAge, _ := time.ParseDuration("1s")
+	b := NewBatch(Config{2, maxAge, 10})
 	defer b.Close()
 	b.Append(1)
 }
 
 func TestOneBatch(t *testing.T) {
-	b := NewBatch(Config{2, 1, 10})
+	maxAge, _ := time.ParseDuration("1s")
+	b := NewBatch(Config{2, maxAge, 10})
 	defer b.Close()
 
 	b.Append(1)
