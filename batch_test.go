@@ -2,6 +2,8 @@ package batch
 
 import (
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestOneBatch(t *testing.T) {
@@ -15,31 +17,14 @@ func TestOneBatch(t *testing.T) {
 	b.Append(5)
 
 	result := b.Scan()
-	if len(result) != 2 {
-		t.Fatalf("result was not of length 2. Was %d", len(result))
-	}
-	if result[0] != 1 {
-		t.Fatalf("result[0] was not 1.  %d", result[0])
-	}
-	if result[1] != 2 {
-		t.Fatalf("result[0] was not 1.  %d", result[0])
-	}
+	assert.Len(t, result, 2)
+	assert.Equal(t, 1, result[0])
+	assert.Equal(t, 2, result[1])
 	result = b.Scan()
-	if len(result) != 2 {
-		t.Fatalf("result was not of length 2. Was %d", len(result))
-	}
-	if result[0] != 3 {
-		t.Fatalf("result[0] was not 1.  %d", result[0])
-	}
-	if result[1] != 4 {
-		t.Fatalf("result[0] was not 1.  %d", result[0])
-	}
-
+	assert.Len(t, result, 2)
+	assert.Equal(t, 3, result[0])
+	assert.Equal(t, 4, result[1])
 	result = b.Scan()
-	if len(result) != 1 {
-		t.Fatalf("result was not of length 2. Was %d", len(result))
-	}
-	if result[0] != 5 {
-		t.Fatalf("result[0] was not 1.  %d", result[0])
-	}
+	assert.Len(t, result, 1)
+	assert.Equal(t, 5, result[0])
 }
