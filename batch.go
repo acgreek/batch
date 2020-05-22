@@ -9,7 +9,7 @@ import (
 // Batch object that holds the various state for batching
 type Batch struct {
 	maxItems        int
-	maxAge          int64
+	maxAge          time.Duration
 	age             int64
 	incompleteBatch []interface{}
 	items           chan interface{}
@@ -64,7 +64,7 @@ func maximum(a, b int64) int64 {
 func batchBuilder(b *Batch) {
 	done := false
 	for done == false {
-		timer := time.NewTimer(time.Second * time.Duration(maximum(0, b.maxAge-(time.Now().Unix()-b.age))))
+		timer := time.NewTimer(b.maxAge)
 		select {
 		case item, ok := <-b.items:
 			done = appendItemPush(b, ok, item)
@@ -84,7 +84,7 @@ func batchBuilder(b *Batch) {
 func NewBatch(cfg Config) *Batch {
 	b := &Batch{
 		maxItems:        cfg.maxItems,
-		maxAge:          int64(cfg.maxAge),
+		maxAge:          cfg.maxAge,
 		age:             time.Now().Unix() + 10000,
 		incompleteBatch: make([]interface{}, 0, cfg.maxItems+1),
 		items:           make(chan interface{}, cfg.maxItems*cfg.consumers),
